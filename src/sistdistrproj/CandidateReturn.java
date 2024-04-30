@@ -3,12 +3,12 @@ package sistdistrproj;
 public class CandidateReturn {
     String operation;
     String status;
-    Candidate data;
+    Object data;
 
     public CandidateReturn(String operation, String status) {
         this.operation = operation;
         this.status = status;
-
+        this.data = new Object();
     }
 
     public String getOperation() {
@@ -27,11 +27,11 @@ public class CandidateReturn {
         this.status = status;
     }
 
-    public Candidate getData() {
+    public Object getData() {
         return data;
     }
 
-    public void setData(Candidate data) {
+    public void setData(Object data) {
         this.data = data;
     }
 

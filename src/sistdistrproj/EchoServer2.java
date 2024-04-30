@@ -45,63 +45,6 @@ public class EchoServer2 extends Thread {
         }
     }
 
-    public void run() {
-        System.out.println("New Communication Thread Started");
-
-        try {
-            PrintWriter out = new PrintWriter(clientSocket.getOutputStream(),
-                    true);
-            BufferedReader in = new BufferedReader(
-                    new InputStreamReader(clientSocket.getInputStream()));
-
-
-            String inputLine = in.readLine();
-            // Recebeu em String do in, vindo do client
-            //System.out.println("Received: " + inputLine); // Apenas mostrando o que recebeu
-
-            Gson gson = new Gson();
-            CandidateRequest requestReceivedObj = gson.fromJson(inputLine, CandidateRequest.class);
-
-            // Filtrando somente o campo 'data' vindo do client
-            CandidateRequest filteredRequest = new CandidateRequest();
-            filteredRequest.setData(requestReceivedObj.getData());
-
-            /******/ /* Aqui será adicionada a checagem do campo 'data' e a inclusao do tratamento de erro */ /******/
-
-            // Retorna para o client um JSON do tipo CandidateReturn //
-            CandidateReturn retornoClient = new CandidateReturn(requestReceivedObj.getOperation(), "SUCCESS");
-            retornoClient.setData(new Candidate());
-            String teste = gson.toJson(retornoClient);
-            out.println(teste);
-            out.flush();
-
-//                // Cadastra em JSON o Candidate
-//                try (FileWriter fileWriter = new FileWriter("output.json")) {
-//                    gson.toJson(filteredRequest, fileWriter);
-//                    System.out.println("JSON escrito em output.json");
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-
-
-//            while ((inputLine = in.readLine()) != null) {
-//                System.out.println("Server: " + inputLine);
-//                out.println(inputLine);
-//
-//                if (inputLine.equals("Bye."))
-//                    break;
-//            }
-
-            // Fecha I/O e socket de conexao com o cliente
-            out.close();
-            in.close();
-            clientSocket.close();
-        } catch (IOException e) {
-            System.err.println("Problem with Communication Server");
-            System.exit(1);
-        }
-    }
-
     // Json para File ('fileName'.json) //
     private static void saveCandidateToFile(CandidateRequest request, String fileName) {
         Gson gson = new Gson();
@@ -132,5 +75,62 @@ public class EchoServer2 extends Thread {
             e.printStackTrace();
         }
         return requests;
+    }
+
+    public void run() {
+        System.out.println("New Communication Thread Started");
+
+        try {
+            PrintWriter out = new PrintWriter(clientSocket.getOutputStream(),
+                    true);
+            BufferedReader in = new BufferedReader(
+                    new InputStreamReader(clientSocket.getInputStream()));
+
+
+            String inputLine = in.readLine();
+            // Recebeu em String do in, vindo do client
+            //System.out.println("Received: " + inputLine); // Apenas mostrando o que recebeu
+
+            Gson gson = new Gson();
+            CandidateRequest requestReceivedObj = gson.fromJson(inputLine, CandidateRequest.class);
+
+            // Filtrando somente o campo 'data' vindo do client
+            CandidateRequest filteredRequest = new CandidateRequest();
+            filteredRequest.setData(requestReceivedObj.getData());
+
+            /******/ /* Aqui será adicionada a checagem do campo 'data' e a inclusao do tratamento de erro */ /******/
+
+            // Retorna para o client um JSON do tipo CandidateReturn //
+            CandidateReturn retornoClient = new CandidateReturn("SIGNUP_CANDIDATE", "SUCCESS");
+
+            String teste = gson.toJson(retornoClient);
+            out.println(teste);
+            out.flush();
+
+//                // Cadastra em JSON o Candidate
+//                try (FileWriter fileWriter = new FileWriter("output.json")) {
+//                    gson.toJson(filteredRequest, fileWriter);
+//                    System.out.println("JSON escrito em output.json");
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+
+
+//            while ((inputLine = in.readLine()) != null) {
+//                System.out.println("Server: " + inputLine);
+//                out.println(inputLine);
+//
+//                if (inputLine.equals("Bye."))
+//                    break;
+//            }
+
+            // Fecha I/O e socket de conexao com o cliente
+            out.close();
+            in.close();
+            clientSocket.close();
+        } catch (IOException e) {
+            System.err.println("Problem with Communication Server");
+            System.exit(1);
+        }
     }
 }

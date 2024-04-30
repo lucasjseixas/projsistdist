@@ -12,6 +12,10 @@ public class Candidate {
         this.name = name;
     }
 
+    public Candidate() {
+
+    }
+
     public String getEmail() {
         return email;
     }
