@@ -2,11 +2,13 @@ package sistdistrproj;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 
 import java.net.*;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class EchoServer2 extends Thread {
     protected Socket clientSocket;
@@ -77,6 +79,27 @@ public class EchoServer2 extends Thread {
         return requests;
     }
 
+    // Metodo de validacao apra CandidateRequest
+    private boolean isValidCandidateRequest(CandidateRequest request) {
+        // Checa se o objeto 'data' existe
+        if (request.getData() == null) {
+            return false;
+        } // Request invalido se o objeto 'data' estiver faltando
+
+        // Extrai 'data' object do CandaidateRequest
+        Data data = request.getData();
+
+        // Checa se o email, password e nome existem e nao sao vazios
+        if (data.getEmail() == null || data.getEmail().isEmpty() || data.getPassword() == null || data.getPassword().isEmpty() || data.getName() == null || data.getName().isEmpty()) {
+            return false;
+
+        } // Request invalido se qualquer um dos campos acima estiver faltando ou vazio
+
+        // Pode adicionar mais tipos de validacoes aqui, como formatacao do email, forca do password
+        return true;
+    }
+
+
     public void run() {
         System.out.println("New Communication Thread Started");
 
@@ -89,31 +112,49 @@ public class EchoServer2 extends Thread {
 
             String inputLine = in.readLine();
             // Recebeu em String do in, vindo do client
-            //System.out.println("Received: " + inputLine); // Apenas mostrando o que recebeu
 
             Gson gson = new Gson();
             CandidateRequest requestReceivedObj = gson.fromJson(inputLine, CandidateRequest.class);
 
-            // Filtrando somente o campo 'data' vindo do client
-            CandidateRequest filteredRequest = new CandidateRequest();
-            filteredRequest.setData(requestReceivedObj.getData());
+            // Recebe o request, seta operation e joga no if e seta o data
 
-            /******/ /* Aqui será adicionada a checagem do campo 'data' e a inclusao do tratamento de erro */ /******/
+            CandidateRequest operationRequest = new CandidateRequest();
+            operationRequest.setOperation(requestReceivedObj.getOperation());
+            operationRequest.setData(requestReceivedObj.getData());
 
-            // Retorna para o client um JSON do tipo CandidateReturn //
-            CandidateReturn retornoClient = new CandidateReturn("SIGNUP_CANDIDATE", "SUCCESS");
+            if (Objects.equals(operationRequest.getOperation(), "SIGNUP_CANDIDATE")) {
+                // Filtrando somente o campo 'data' vindo do client
+                CandidateRequest filteredRequest = new CandidateRequest();
+                filteredRequest.setData(requestReceivedObj.getData());
 
-            String teste = gson.toJson(retornoClient);
-            out.println(teste);
-            out.flush();
+                /******/ /* Aqui será adicionada a checagem do campo 'data' e a inclusao do tratamento de erro */ /******/
+                // Chama a funcao isValidCandidateRequest e checa 'data' e os campos dentro dele
 
-//                // Cadastra em JSON o Candidate
-//                try (FileWriter fileWriter = new FileWriter("output.json")) {
-//                    gson.toJson(filteredRequest, fileWriter);
-//                    System.out.println("JSON escrito em output.json");
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
+                if (isValidCandidateRequest(requestReceivedObj)) {
+                    // Retorna para o client um JSON do tipo CandidateReturn //
+                    CandidateReturn retornoClient = new CandidateReturn("SIGNUP_CANDIDATE", "SUCCESS");
+                    String teste = gson.toJson(retornoClient);
+                    out.println(teste);
+                    out.flush();
+
+                    // Cadastra em JSON o Candidate
+                    try (FileWriter fileWriter = new FileWriter("database.json")) {
+                        gson.toJson(filteredRequest, fileWriter);
+                        System.out.println("JSON escrito em database.json");
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    CandidateReturn retornoClient = new CandidateReturn("SIGNUP_CANDIDATE", "INVALID_FIELD");
+                    String testefail = gson.toJson(retornoClient);
+                    out.println(testefail);
+                    out.flush();
+                }
+                // Fecha I/O e socket de conexao com o cliente
+                out.close();
+                in.close();
+                clientSocket.close();
+            }
 
 
 //            while ((inputLine = in.readLine()) != null) {
@@ -124,13 +165,8 @@ public class EchoServer2 extends Thread {
 //                    break;
 //            }
 
-            // Fecha I/O e socket de conexao com o cliente
-            out.close();
-            in.close();
-            clientSocket.close();
         } catch (IOException e) {
-            System.err.println("Problem with Communication Server");
-            System.exit(1);
+            throw new RuntimeException(e);
         }
     }
 }

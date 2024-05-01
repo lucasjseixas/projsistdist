@@ -3,30 +3,34 @@ package sistdistrproj;
 public class CandidateRequest {
 
     String operation;
-    Candidate data;
+    Data data;
 
-    public CandidateRequest(String operation, Candidate data) {
+    public CandidateRequest(String operation, Data data) {
         this.operation = operation;
         this.data = data;
     }
 
     public CandidateRequest() {
-        
+
     }
 
     public String getOperation() {
+
         return operation;
     }
 
     public void setOperation(String operation) {
+
         this.operation = operation;
     }
 
-    public Candidate getData() {
+    public Data getData() {
+
         return data;
     }
 
-    public void setData(Candidate data) {
+    public void setData(Data data) {
+
         this.data = data;
     }
 
