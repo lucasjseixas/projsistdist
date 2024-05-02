@@ -1,8 +1,9 @@
 package sistdistrproj;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTCreationException;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
 
 import java.net.*;
 import java.io.*;
@@ -79,7 +80,7 @@ public class EchoServer2 extends Thread {
         return requests;
     }
 
-    // Metodo de validacao apra CandidateRequest
+    // Metodo de validacao para CandidateRequest
     private boolean isValidCandidateRequest(CandidateRequest request) {
         // Checa se o objeto 'data' existe
         if (request.getData() == null) {
@@ -91,6 +92,26 @@ public class EchoServer2 extends Thread {
 
         // Checa se o email, password e nome existem e nao sao vazios
         if (data.getEmail() == null || data.getEmail().isEmpty() || data.getPassword() == null || data.getPassword().isEmpty() || data.getName() == null || data.getName().isEmpty()) {
+            return false;
+
+        } // Request invalido se qualquer um dos campos acima estiver faltando ou vazio
+
+        // Pode adicionar mais tipos de validacoes aqui, como formatacao do email, forca do password
+        return true;
+    }
+
+    // Metodo de validacao para CandidateRequest
+    private boolean isValidCandidateRequestLogar(CandidateRequestLogar requestLogar) {
+        // Checa se o objeto 'data' existe
+        if (requestLogar.getData() == null) {
+            return false;
+        } // Request invalido se o objeto 'data' estiver faltando
+
+        // Extrai 'data' object do CandaidateRequest
+        DataLogar dataLogar = requestLogar.getData();
+
+        // Checa se o email, password e nome existem e nao sao vazios
+        if (dataLogar.getEmail() == null || dataLogar.getEmail().isEmpty() || dataLogar.getPassword() == null || dataLogar.getPassword().isEmpty()) {
             return false;
 
         } // Request invalido se qualquer um dos campos acima estiver faltando ou vazio
@@ -115,14 +136,17 @@ public class EchoServer2 extends Thread {
 
             Gson gson = new Gson();
             CandidateRequest requestReceivedObj = gson.fromJson(inputLine, CandidateRequest.class);
-
             // Recebe o request, seta operation e joga no if e seta o data
+
+            CandidateRequestLogar requestReceivedObjtwo = gson.fromJson(inputLine, CandidateRequestLogar.class);
 
             CandidateRequest operationRequest = new CandidateRequest();
             operationRequest.setOperation(requestReceivedObj.getOperation());
             operationRequest.setData(requestReceivedObj.getData());
 
+
             if (Objects.equals(operationRequest.getOperation(), "SIGNUP_CANDIDATE")) {
+
                 // Filtrando somente o campo 'data' vindo do client
                 CandidateRequest filteredRequest = new CandidateRequest();
                 filteredRequest.setData(requestReceivedObj.getData());
@@ -138,9 +162,9 @@ public class EchoServer2 extends Thread {
                     out.flush();
 
                     // Cadastra em JSON o Candidate
-                    try (FileWriter fileWriter = new FileWriter("database.json")) {
+                    try (FileWriter fileWriter = new FileWriter("databaseserver.json")) {
                         gson.toJson(filteredRequest, fileWriter);
-                        System.out.println("JSON escrito em database.json");
+                        System.out.println("JSON escrito em databaseserver.json");
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -154,6 +178,51 @@ public class EchoServer2 extends Thread {
                 out.close();
                 in.close();
                 clientSocket.close();
+
+            } else if (Objects.equals(operationRequest.getOperation(), "LOGIN_CANDIDATE")) {
+
+                CandidateRequestLogar operationRequestt = new CandidateRequestLogar();
+                operationRequestt.setOperation(requestReceivedObjtwo.getOperation());
+                operationRequestt.setData(requestReceivedObjtwo.getData());
+
+                CandidateRequestLogar filteredRequestt = new CandidateRequestLogar();
+                filteredRequestt.setData(requestReceivedObjtwo.getData());
+                if (isValidCandidateRequestLogar(requestReceivedObjtwo)) {
+                    try {
+                        Algorithm algorithm = Algorithm.HMAC256("DISTRIBUIDOS");
+                        String token = JWT.create()
+                                .withClaim("id", "eu")
+                                .withClaim("role", "CANDIDATE")
+                                .sign(algorithm);
+                        System.out.println(token);
+                        // Retorna para o client um JSON do tipo CandidateReturn //
+                        CandidateReturnLogar retornoClient = new CandidateReturnLogar("LOGIN_CADIDATE", "SUCCESS", new Data(), token);
+                        String teste = gson.toJson(retornoClient);
+                        out.println(teste);
+                        out.flush();
+
+                        // Cadastra em JSON o Candidate
+                        try (FileWriter fileWriter = new FileWriter("databaseserver.json")) {
+                            gson.toJson(filteredRequestt, fileWriter);
+                            System.out.println("JSON escrito em databaseserver.json");
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    } catch (JWTCreationException exception) {
+                        // Invalid Signing configuration / Couldn't convert Claims.
+                    }
+
+                } else {
+                    CandidateReturnLogar retornoClient = new CandidateReturnLogar("LOGIN_CANDIDATE", "INVALID_FIELD", new Data());
+                    String testefail = gson.toJson(retornoClient);
+                    out.println(testefail);
+                    out.flush();
+                }
+                // Fecha I/O e socket de conexao com o cliente
+                out.close();
+                in.close();
+                clientSocket.close();
+
             }
 
 

@@ -1,21 +1,20 @@
 package sistdistrproj;
 
-public class Data {
+
+public class DataLogar {
     String email;
     String password;
-    String name;
 
-    public Data(String email, String password, String name) {
+    public DataLogar(String email, String password, String name) {
         this.email = email;
         this.password = password;
-        this.name = name;
     }
 
-    public Data() {
+    public DataLogar() {
 
     }
 
-    public Data(String email, String password) {
+    public DataLogar(String email, String password) {
         this.email = email;
         this.password = password;
 
@@ -30,7 +29,6 @@ public class Data {
         return "Data{" +
                 "email='" + email + '\'' +
                 ", password='" + password + '\'' +
-                ", name='" + name + '\'' +
                 '}';
     }
 
@@ -46,11 +44,4 @@ public class Data {
         this.password = password;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
 }
